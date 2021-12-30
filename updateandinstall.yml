@@ -1,6 +1,6 @@
 ---
 
-- hosts: all
+- hosts: raspberrypi2
   
   tasks:
   - name:  update the raspian

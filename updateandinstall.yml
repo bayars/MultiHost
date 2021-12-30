@@ -1,0 +1,18 @@
+---
+
+- hosts: all
+  
+  tasks:
+  - name:  update the raspian
+    apt: name=aptitude state=latest update_cache=yes force_apt_get=keys
+
+  - name: Install some required packages
+    apt: name={{item}} state=latest update_cache=yes
+    loop: ['apt-transport-http','ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
+
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/raspian/gpg
+      state: present
+
+

@@ -1,0 +1,17 @@
+---
+
+- host: localhost
+  become: yes
+  tasks:
+    - name: update
+      apt:
+        name=aptitude state=latest update_cache=yes force_apt_get=keys
+
+    - name: install some required packages
+      apt:
+        name={{item}} state=latest update_cache=yes force_apt_get=keys
+      loop: ['vim','python3-pip']
+
+    - name: set hostname
+      hostname: host1
+

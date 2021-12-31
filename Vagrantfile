@@ -9,30 +9,40 @@
 
 
 Vagrant.configure("2") do |config|
+    
+    config.ssh.insert_key = false 
+    config.vm.provider :virtualbox do|vb| 
+        vb.customize ["modifyvm", :id, "--memory", "2048"] 
+    end 
+
+
     config.vm.define "raspberrypi1" do |first|
         first.vm.box = "debian/bullseye64"
-        config.vm.network "private_network", ip: "192.168.56.200"
-        config.vm.provider "libvirt"  do |vb|
-            vb.memory = "1024"
-        end
+        first.vm.hostname = "raspberrypi1"
+        first.vm.network "forwarded_port", guest: "80", host: "8080"
+        first.vm.network :private_network, ip: "192.168.56.200"
+        first.verbose = "v"
+        first.playbook = "sethost1.yml"
     end
 
 
     config.vm.define "raspberrypi2" do |second|
         second.vm.box = "debian/bullseye64"
-        config.vm.network "private_network", ip: "192.168.56.201"
-        config.vm.provider "libvirt"  do |vb|
-            vb.memory = "1024"
-        end
+        second.vm.hostname = "raspberrypi2"
+        second.vm.network "forwarded_port", guest: "80", host: "8080"
+        second.vm.network :private_network, ip: "192.168.56.201"
+        second.verbose = "v"
+        second.playbook = "sethost2.yml"
     end
 
 
     config.vm.define "raspberrypi3" do |third|
         third.vm.box = "debian/bullseye64"
-        config.vm.network "private_network", ip: "192.168.56.202"
-        config.vm.provider "libvirt"  do |vb|
-            vb.memory = "1024"
-        end
+        third.vm.hostname = "raspberrypi3"
+        third.vm.network "forwarded_port", guest: "5432", host: "5432"
+        third.vm.network :private_network, ip: "192.168.56.202"
+        third.verbose = "v"
+        third.playbook = "sethost3.yml"
     end
 
   # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"

@@ -1,0 +1,29 @@
+- name: Update all pies
+  hosts: all
+  become: yes
+  tasks:
+    - name: "Distro update"
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+
+    - name: "Install some packages"
+      apt: name={{item}} state=latest update_cache=yes
+      loop: ['vim','htop','python3-pip','git']
+
+    - name: Remove previous syslog configurations
+      shell:
+        sed '/*.*@@{{ ansible_hostname }}:514;RSYSLOG_SyslogProtocol23Format/d' /etc/rsyslog.conf
+
+    - name: Connect to graylog
+      shell:
+        echo "*.*@@192.168.2.185:5142;RSYSLOG_SyslogProtocol23Format" >> /etc/rsyslog.conf
+
+    - name: restart service
+      service:
+          name: rsyslog
+          state: restarted
+
+            

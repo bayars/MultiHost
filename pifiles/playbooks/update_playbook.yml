@@ -1,0 +1,15 @@
+---
+- name: Test Ping
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: "Update cache & Full system update"
+      apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+        force_apt_get: true
+    - name: "Install docker-ce"
+      apt:
+        name: ca-certificates curl gnupg lsb-release

@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+      - vars/default.yml
+
+  tasks:
+      - name: Install apt using apt
+        apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+      - name: Install required system packages
+        apt: name={{ item }} state=latest update_cache=yes
+        loop: ['apt-transport-https','curl','wget','software-properties-common','python3-pip','virtualenv','python3-setuptools']
+
+      - name: Download docker script
+        get_url:
+            url: https://get.docker.com
+            dest: /home/pi/get-docker.sh
+            mode: '0440'
+      
+      - name: Execute the script
+        command: bash /home/pi/get-docker.sh 
+

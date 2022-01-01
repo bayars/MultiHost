@@ -1,0 +1,59 @@
+---
+- name: "web server setup"
+  hosts: webserver
+  become: yes
+  tasks:
+    - name: Set web server service
+      apt:
+        name:  nginx
+        update_cache: yes
+      tags:
+        - webserver
+    - name: "Start the service"
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+      tags:
+        - webserver
+    - name: Download github repo
+      git:
+        repo: https://github.com/rection/Cloud-Management-Panel.git
+        dest: /home/pi/Cloud-Management-Panel/
+        update: yes
+      tags:
+        - webserver
+     
+    - name: create virtualenv
+      pip:
+        name:  cloudpanelenv
+        virtualenv: /home/pi/cloudpanelenv
+        virtualenv_command: virtualenv -p python3.9
+      tags:
+        - webserver
+
+    - name: install dependecies
+      pip:
+        requirements: /home/pi/Cloud-Management-Panel/requirements.txt
+      tags:
+        - webserver
+
+
+- name: Database Installation
+  hosts: database
+  become: yes
+  tasks:
+      - name: download postgres
+        apt: 
+            name: postgresql
+            update-cache: yes
+        tags:
+            - database
+      - name: start postgres
+        service:
+            name: postgresql
+            state: started
+            enabled: yes
+        tags:
+            - database
+

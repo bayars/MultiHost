@@ -23,12 +23,12 @@ Vagrant.configure("2") do |config|
         # ansible.tags="web,database"
     end
 
-    config.vm.define "host1" do |first|
-        first.vm.box = "debian/bullseye64"
-        first.vm.hostname = "host1"
-        first.vm.network "forwarded_port", guest: "80", host: "8080"
-        first.vm.network :private_network, ip: "192.168.56.200"
-    end
+    # config.vm.define "host1" do |first|
+    #     first.vm.box = "debian/bullseye64"
+    #     first.vm.hostname = "host1"
+    #     first.vm.network "forwarded_port", guest: "80", host: "8080"
+    #     first.vm.network :private_network, ip: "192.168.56.200"
+    # end
 
 
     config.vm.define "host2" do |second|

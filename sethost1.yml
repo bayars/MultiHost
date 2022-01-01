@@ -11,10 +11,46 @@
       apt:
         name={{item}} state=latest update_cache=yes force_apt_get=yes
       loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git']
+      
+- name: Database Installation
+  hosts: host3
+  become: yes
+  tasks:
+    - name: download postgres
+      apt: 
+        name: postgresql
+        update-cache: yes
+      tags:
+        - database
+    - name: start postgres
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+      tags:
+        - database
+
+    - name: get current ip address
+      vars:
+        hostip: "{{ansible_eth1.ipv4.address }}"
+      tags:
+        - database
 
 - name: webserver installation 
   hosts: host2
   tasks:
+    - name: Run whoami without become.
+      command: whoami
+      changed_when: false
+      become: false
+      register: whoami
+      tags:
+        - web
+
+    - name: Delete content & directory
+      file:
+        state: absent
+        path: "/home/{{ whoami.stdout }}/CloudManagement"
 
     - name: Install nginx
       become: yes
@@ -43,35 +79,34 @@
       git:
         repo: https://github.com/rection/Cloud-Management-Panel.git
         clone: yes
-        dest: /home/vagrant/CloudManagement
+        dest: "/home/{{ whoami.stdout }}/CloudManagement"
       tags:
         - web
 
     - name: Install requried extensions
       pip:
-        requirements: /home/vagrant/CloudManagement/requirements.txt
-        virtualenv: /home/vagrant/CloudManagement/myenv
+        requirements: "/home/{{ whoami.stdout }}/CloudManagement/requirements.txt"
+        virtualenv: "/home/{{ whoami.stdout }}/CloudManagement/myenv"
         virtualenv_python: python3.9
       tags:
         - web
 
-- name: Database Installation
-  hosts: host3
-  become: yes
-  tasks:
-    - name: download postgres
-      apt: 
-        name: postgresql
-        update-cache: yes
+    - name: replace database host 
+      replace:
+        path: "/home/{{ whoami.stdout }}/CloudManagement/cloudpanel/settings.py"
+        regexp: 'localhost'
+        replace: hostip
       tags:
-        - database
-    - name: start postgres
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
+        - web
+
+    - name: replace database port
+      replace:
+        path: "/home/{{ whoami.stdout }}/CloudManagement/cloudpanel/settings.py"
+        regexp: '32450'
+        replace: '5432'
       tags:
-        - database
+        - web 
+
 
 
 

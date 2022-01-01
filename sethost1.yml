@@ -42,7 +42,7 @@
     - name: clone django project from github
       git:
         repo: https://github.com/rection/Cloud-Management-Panel.git
-        clone: no
+        clone: yes
         dest: /home/vagrant/CloudManagement
       tags:
         - web

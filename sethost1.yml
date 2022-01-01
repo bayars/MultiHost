@@ -10,34 +10,12 @@
     - name: install some required packages
       apt:
         name={{item}} state=latest update_cache=yes force_apt_get=yes
-      loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git']
-      
-- name: Database Installation
-  hosts: host3
-  become: yes
-  tasks:
-    - name: download postgres
-      apt: 
-        name: postgresql
-        update-cache: yes
-      tags:
-        - database
-    - name: start postgres
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
-      tags:
-        - database
-
-    - name: get current ip address
-      vars:
-        hostip: "{{ansible_eth1.ipv4.address }}"
-      tags:
-        - database
+      loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git','libpq-dev','net-tools']
 
 - name: webserver installation 
   hosts: host2
+  vars:
+    hostip: '192.168.56.202'
   tasks:
     - name: Run whoami without become.
       command: whoami
@@ -56,13 +34,6 @@
       become: yes
       apt:
         name=nginx state=latest update_cache=yes force_apt_get=yes
-      tags:
-        - web
-
-    - name: install postgres connection library
-      become: yes
-      apt:
-        name=libpq-dev state=latest force_apt_get=yes
       tags:
         - web
 
@@ -95,7 +66,7 @@
       replace:
         path: "/home/{{ whoami.stdout }}/CloudManagement/cloudpanel/settings.py"
         regexp: 'localhost'
-        replace: hostip
+        replace: "{{ hostip }}"
       tags:
         - web
 
@@ -107,7 +78,82 @@
       tags:
         - web 
 
+    - name: migrate the django app
+      shell:
+        "cd /home/{{ whoami.stdout }}/CloudManagement/ && . myenv/bin/activate && python3 manage.py migrate"
+      tags:
+        - web
+    
+    - name: run the server
+      shell: 
+        "cd /home/{{ whoami.stdout }}/CloudManagement/ && . myenv/bin/activate && nohup python manage.py runserver 127.0.0.1:8000 &"
 
+      
+- name: Database Installation
+  hosts: host3
+  become: yes
+  vars:
+    db_name: cloudpanel
+    db_user: test
+    db_password: TEST
+  tasks:
+    - name: download postgres
+      apt: 
+        name: postgresql
+        update-cache: yes
+      tags:
+        - database
 
+    - name: Install requried extensions
+      pip:
+        name: psycopg2
+      tags:
+        - database
+    - name: start postgres
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+      tags:
+        - database
 
+    - name: "Create app database"
+      postgresql_db:
+        state: present
+        name: "{{ db_name }}"
+      become: yes
+      become_user: postgres
 
+    - name: "Create db user"
+      postgresql_user:
+        state: present
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+      become: yes
+      become_user: postgres
+
+    - name: "Grant db user access to app db"
+      postgresql_privs:
+        type: database
+        database: "{{ db_name }}"
+        roles: "{{ db_user }}"
+        grant_option: no
+        privs: all
+      become: yes
+      become_user: postgres
+
+    - name: "Allow md5 connection for the db user"
+      postgresql_pg_hba:
+        dest: "/etc/postgresql/13/main/pg_hba.conf"
+        contype: host
+        databases: all
+        method: md5
+        users: "{{ db_user }}"
+        create: true
+      become: yes
+      become_user: postgres
+      notify: restart postgres
+
+  handlers:
+    - name: restart postgresql
+      service: name=postgresql state=restarted

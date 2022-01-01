@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "ansible" do |ansible|
         ansible.verbose = "v"
         ansible.playbook = "sethost1.yml"
-        ansible.tags="web,database"
+        # ansible.tags="web,database"
     end
 
     config.vm.define "host1" do |first|
@@ -42,7 +42,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "host3" do |third|
         third.vm.box = "debian/bullseye64"
         third.vm.hostname = "host3"
-        third.vm.network "forwarded_port", guest: "5432", host: "5433"
+        third.vm.network "forwarded_port", guest: "5432", host: "5432"
         third.vm.network :private_network, ip: "192.168.56.202"
     end
 

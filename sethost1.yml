@@ -10,19 +10,28 @@
     - name: install some required packages
       apt:
         name={{item}} state=latest update_cache=yes force_apt_get=yes
-      loop: ['vim','python3-pip','apt-transport-https','curl','wget','software-properties-common','virtualenv','python3-setuptools']
+      loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git']
 
 - name: webserver installation 
   hosts: host2
-  become: yes
   tasks:
+
     - name: Install nginx
+      become: yes
       apt:
         name=nginx state=latest update_cache=yes force_apt_get=yes
       tags:
         - web
 
+    - name: install postgres connection library
+      become: yes
+      apt:
+        name=libpq-dev state=latest force_apt_get=yes
+      tags:
+        - web
+
     - name: start nginx
+      become: yes
       service:
         name: nginx
         state: started
@@ -30,7 +39,21 @@
       tags:
         - web
 
-  
+    - name: clone django project from github
+      git:
+        repo: https://github.com/rection/Cloud-Management-Panel.git
+        clone: no
+        dest: /home/vagrant/CloudManagement
+      tags:
+        - web
+
+    - name: Install requried extensions
+      pip:
+        requirements: /home/vagrant/CloudManagement/requirements.txt
+        virtualenv: /home/vagrant/CloudManagement/myenv
+        virtualenv_python: python3.9
+      tags:
+        - web
 
 - name: Database Installation
   hosts: host3

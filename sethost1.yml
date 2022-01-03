@@ -10,7 +10,7 @@
     - name: install some required packages
       apt:
         name={{item}} state=latest update_cache=yes force_apt_get=yes
-      loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git','libpq-dev','net-tools']
+      loop: ['vim','python3-pip','apt-transport-https','curl','software-properties-common','virtualenv','python3-setuptools','git','libpq-dev','net-tools','acL']
 
 - name: webserver installation 
   hosts: host2

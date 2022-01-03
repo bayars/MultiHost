@@ -31,6 +31,13 @@ Vagrant.configure("2") do |config|
     # end
 
 
+    config.vm.define "host3" do |third|
+        third.vm.box = "debian/bullseye64"
+        third.vm.hostname = "host3"
+        third.vm.network "forwarded_port", guest: "5432", host: "5432"
+        third.vm.network :private_network, ip: "192.168.56.202"
+    end
+    
     config.vm.define "host2" do |second|
         second.vm.box = "debian/bullseye64"
         second.vm.hostname = "host2"
@@ -39,12 +46,7 @@ Vagrant.configure("2") do |config|
     end
 
 
-    config.vm.define "host3" do |third|
-        third.vm.box = "debian/bullseye64"
-        third.vm.hostname = "host3"
-        third.vm.network "forwarded_port", guest: "5432", host: "5432"
-        third.vm.network :private_network, ip: "192.168.56.202"
-    end
+
 
   # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
   #  config.vm.network "public_network"
